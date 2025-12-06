@@ -205,8 +205,8 @@ def extract_memories_worker():
 
     while not stop_monitoring:
         try:
-            # Process when we have at least 5 messages or every 5 minutes
-            if len(memory_extraction_queue) >= 5:
+            # Process whenever we have messages
+            if memory_extraction_queue:
                 print(f"[MEMORY] Processing batch of {len(memory_extraction_queue)} messages...")
 
                 # Group messages by chat_id
@@ -301,7 +301,7 @@ try:
                 time_diff = (current_time - sent_time).total_seconds()
                 
                 if time_diff > 60:
-                    # print(f"Ignoring message from {time_diff:.1f}s ago (older than 1 minute)")
+                    print(f"Ignoring message from {time_diff:.1f}s ago (older than 1 minute)")
                     continue
             except Exception as e:
                 print(f"Error parsing timestamp: {e}")
