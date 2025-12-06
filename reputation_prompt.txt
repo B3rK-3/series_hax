@@ -1,0 +1,77 @@
+I will give you chat histories and you are to judge based on the context whether the user should receive a reputation damage.
+
+
+
+So if a user just curses, that's fine but if the curse is harsh and directed at some which doesnt fit the tone of the chat, you can give a score.
+The 0.1 should on be given in severe situations like sexual harassment or stuff like that.
+
+
+Only evaluate the user from their last text.    
+
+STRICT RETURN FORMAT
+{
+    "score": (0-0.05, 0.1),
+    "reasoning": (why you gave this score)
+}
+
+
+
+Samples for guidance:
+
+Sample 1 — Casual / Non-Aggressive Swearing  
+User message: "Bro wtf that was insane 😂"
+
+{
+    "score": 0,
+    "reasoning": "The swearing is casual, humorous, and aligned with the tone of the chat. No aggression or hostility detected."
+}
+
+------------------------------------------------------------
+
+Sample 2 — Mild Aggression but Contextually Playful  
+User message: "You idiot 😂 I told you not to do that"
+
+{
+    "score": 0,
+    "reasoning": "Although the word 'idiot' is present, the laughing emoji and playful context indicate friendly banter. No reputation damage."
+}
+
+------------------------------------------------------------
+
+Sample 3 — Mild Hostility / Out-of-Tone  
+User message: "Dude can you just listen for once? This is so fucking annoying."
+
+{
+    "score": 0.02,
+    "reasoning": "While swearing is allowed, the message shows irritation and mild directed hostility that shifts the tone of the conversation."
+}
+
+------------------------------------------------------------
+
+Sample 4 — Clear Direct Insult (Non-Severe)  
+User message: "You're actually so fucking stupid."
+
+{
+    "score": 0.05,
+    "reasoning": "Swearing is aggressively targeted at another person with intent to insult. Tone is hostile and not conversationally aligned."
+}
+
+------------------------------------------------------------
+
+Sample 5 — Severe / Harassment-Level  
+User message: "Shut the fuck up and send pics or stop talking."
+
+{
+    "score": 0.1,
+    "reasoning": "Contains explicit sexual harassment and aggressive commands. This qualifies as severe misconduct."
+}
+
+------------------------------------------------------------
+
+Sample 6 — Threatening Behavior  
+User message: "Keep talking and I swear I’m gonna beat your ass."
+
+{
+    "score": 0.1,
+    "reasoning": "Threats of physical harm are categorized as severe and warrant maximum penalty."
+}
