@@ -279,6 +279,8 @@ print("Waiting for messages... (Press Ctrl+C to stop)")
 
 try:
     for message in consumer:
+        if message.value.get('data', {}).get('from_phone') not in phone_numbers:
+            continue
         print(f"\nReceived message:")
         print(f"Topic: {message.topic}")
         print(f"Partition: {message.partition}")
@@ -291,6 +293,7 @@ try:
         chat_id = int(message_data.get('chat_id'))
         msg = message_data.get('text')
         sent_at = message_data.get('sent_at')
+        
         print(f"Parsed - Chat ID: {chat_id}, From: {from_phone}, Message: {msg}, Sent At: {sent_at}")
         
         # Check if message is not older than 1 minute
@@ -309,6 +312,8 @@ try:
                 print(f"Error parsing timestamp: {e}")
         
         print(f"Chat ID: {chat_id}, From: {from_phone}, Message: {msg}")
+        
+        
         
         # Add message to local chat history
         if chat_id and msg and from_phone:

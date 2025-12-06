@@ -6,7 +6,7 @@ Actions:
         response:
             {
                 "action": "remind",
-                "message": (up to your discretion),
+                "message": (say something along the lines of okay I will remind back in 15 minutes (or the specified amount of time)),
                 "next_message": (if there is a specified time frame in which they said they will respond add it here in seconds, default: 750),
                 "chat_phone_number": (the phone number for which the person hasnt responded to in chat)
             }
