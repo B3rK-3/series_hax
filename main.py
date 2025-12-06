@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from src import (
     think_and_act, send_reminder, priority_queue, get_chat_history,
     get_ai_response, scan_inactive_chats, add_message_to_chat,
-    ContactManager, MemoryExtractor, EnhancedMemoryEngine
+    ContactManager, MemoryExtractor, EnhancedMemoryEngine, extract_memory
 )
 
 # Load environment variables
@@ -41,11 +41,11 @@ chat_mapping = {}
 phone_to_chat = {}
 
 # Default delay for reminders (in seconds)
-REMINDER_DELAY = 5  # 5 seconds
+REMINDER_DELAY = 30  # 5 seconds
 
 # Conversation starters configuration
-CONVO_STARTERS = 60 * 60  # Check every 60 seconds
-LAST_ACTIVITY = 15  # Consider chat inactive after 10 seconds
+CONVO_STARTERS = 1000  # Check every 60 seconds
+LAST_ACTIVITY = 1000 # Consider chat inactive after 10 seconds
 
 # Dictionary to track last activity time for each chat
 last_activity_tracker = {}
@@ -59,6 +59,57 @@ memory_extraction_enabled = os.getenv('MEMORY_EXTRACTION_ENABLED', 'true').lower
 contact_manager = ContactManager()
 memory_extractor = MemoryExtractor(gemini_api_key, contact_manager)
 enhanced_memory = EnhancedMemoryEngine()
+
+# Memory priority queue: (reminder_timestamp, phone_number, person_name, memory_summary, memory_category)
+memory_priority_queue = []
+
+# Memory reminder configuration (remind after 7 days by default)
+MEMORY_REMINDER_DAYS = 7
+MEMORY_REMINDER_SECONDS = MEMORY_REMINDER_DAYS * 24 * 60 * 60
+
+
+def monitor_memory_reminders():
+    """Monitor the memory priority queue for memories that should be reminded."""
+    global stop_monitoring
+    
+    while not stop_monitoring:
+        try:
+            current_time = time.time()
+            
+            # Check if there are any memories in the queue
+            if memory_priority_queue:
+                # Peek at the top of the queue (smallest timestamp)
+                reminder_timestamp, other_phone_numbers, from_phone, person_name, memory_summary, memory_category, chat_id = memory_priority_queue[0]
+                
+                # If the timestamp has expired, pop it and send memory reminder
+                if reminder_timestamp <= current_time:
+                    heapq.heappop(memory_priority_queue)
+                    print(f"\n[MEMORY REMINDER] Time to remind about {person_name}: {memory_summary}")
+                    # Send memory reminder individually to each phone number in the chat
+                    from src.series_api import send_message_to_chat
+                    for phone in other_phone_numbers:
+                        if phone in phone_to_chat:
+                            target_chat_id = phone_to_chat[phone]
+                            recipient_name = memory_extractor.contact_manager.get_name(phone) or phone
+                            reminder_msg = f"yo {recipient_name}! Don't forget {memory_summary.lower()}. Ask how it went"
+                            prompt = f"""add a short question at the end of this `{reminder_msg}` .
+                            you will suggest a question to the user to respond to based on the memory summary provided.
+                            
+                            Example: "You should ask him how it went"
+                            """
+
+                            # reminder_msg += get_ai_response(prompt, chat_history=[])
+                            send_message_to_chat(target_chat_id, reminder_msg)
+                            print(f"[MEMORY REMINDER] Sent to {phone}")
+                    
+                    print(f"Memory priority queue size after removal: {len(memory_priority_queue)}")
+            
+            # Sleep for a short period to avoid busy waiting
+            sleep(1)
+            
+        except Exception as e:
+            print(f"Error in memory reminder monitor: {e}")
+            sleep(1)
 
 
 def create_group_chat():
@@ -191,7 +242,7 @@ def scan_chats_for_inactivity():
 
     while not stop_monitoring:
         try:
-            scan_inactive_chats(chat_mapping, last_activity_tracker, LAST_ACTIVITY, phone_to_chat)
+            scan_inactive_chats(chat_mapping, last_activity_tracker, LAST_ACTIVITY, phone_to_chat, memory_extractor)
             # Sleep for CONVO_STARTERS seconds before checking again
             sleep(CONVO_STARTERS)
         except Exception as e:
@@ -237,6 +288,70 @@ def extract_memories_worker():
             sleep(30)
 
 
+def scan_for_ghosting():
+    """Scan for ghosting patterns - when someone hasn't responded in a significant time."""
+    global stop_monitoring
+    
+    # Ghosting threshold (in seconds) - consider ghosting if no response after this time
+    GHOSTING_THRESHOLD = 10  # 1 hour
+    
+    while not stop_monitoring:
+        try:
+            current_time_dt = datetime.now(timezone.utc)
+            from src.chat_storage import load_chats
+            
+            # Check each chat for ghosting
+            for chat_id, phone_numbers_in_chat in chat_mapping.items():
+                chats = load_chats()
+                print(f"[GHOSTING SCAN] Checking chat {chat_id} for ghosting...")
+                chat_id_str = str(chat_id)
+                
+                if chat_id_str in chats and len(chats[chat_id_str]) > 0:
+                    last_message = chats[chat_id_str][-1]
+                    message_text = last_message.get('text', '')
+                    from_phone = last_message.get('sent_from', '')
+                    sent_at = last_message.get('sent_at', '')
+                    
+                    # Calculate time difference from last message
+                    if sent_at:
+                        try:
+                            sent_time = datetime.strptime(sent_at, '%Y-%m-%d %H:%M:%S %z')
+                            time_since_message = (current_time_dt - sent_time).total_seconds()
+                            print(f"[GHOSTING SCAN] Chat {chat_id}: {time_since_message:.1f}s since last message (threshold: {GHOSTING_THRESHOLD}s)")
+                            
+                            if time_since_message > GHOSTING_THRESHOLD:
+                                print(f"\n[GHOSTING] Detected potential ghosting in chat {chat_id}")
+                                print(f"[GHOSTING] No response for {time_since_message:.0f} seconds ({time_since_message/60:.1f} minutes)")
+                                
+                                if message_text:
+                                    # Ask AI if this message should be responded to
+                                    prompt = f"""Does this message require a response or action from others? Answer only 'true' or 'false'.
+                            
+Message: "{message_text}"
+                                    """
+                                    
+                                    ai_response = get_ai_response(prompt, chat_history=[])
+                                    should_respond = 'true' in ai_response.lower()
+                                    
+                                    print(f"[GHOSTING] Last message from {from_phone}: '{message_text}'")
+                                    print(f"[GHOSTING] Should respond: {should_respond}")
+                                    
+                                    if should_respond:
+                                        # Decrease reputation score for all phones that haven't responded (everyone except sender)
+                                        for phone in phone_numbers_in_chat:
+                                            if phone != from_phone:
+                                                print(f"[GHOSTING] {phone} ghosting violation - reputation score decreased by 0.01")
+                        except Exception as e:
+                            print(f"[GHOSTING] Error parsing timestamp for chat {chat_id}: {e}")
+            
+            # Sleep for check interval (check every 5 minutes)
+            sleep(5)
+            
+        except Exception as e:
+            print(f"Error in ghosting detector: {e}")
+            sleep(5 * 60)
+
+
 # Initialize Consumer
 consumer = KafkaConsumer(
     topic_name,
@@ -266,19 +381,31 @@ print("Starting chat inactivity scanner thread...")
 scanner_thread = threading.Thread(target=scan_chats_for_inactivity, daemon=True)
 scanner_thread.start()
 
+# Start memory reminder monitor thread
+print("Starting memory reminder monitor thread...")
+memory_monitor_thread = threading.Thread(target=monitor_memory_reminders, daemon=True)
+memory_monitor_thread.start()
+
+# Start ghosting detection thread
+print("Starting ghosting detection thread...")
+ghosting_thread = threading.Thread(target=scan_for_ghosting, daemon=True)
+ghosting_thread.start()
+
 # Start memory extraction thread
-if memory_extraction_enabled:
-    print("Starting memory extraction worker...")
-    extraction_thread = threading.Thread(target=extract_memories_worker, daemon=True)
-    extraction_thread.start()
-else:
-    print("Memory extraction disabled")
+# if memory_extraction_enabled:
+#     print("Starting memory extraction worker...")
+#     extraction_thread = threading.Thread(target=extract_memories_worker, daemon=True)
+#     extraction_thread.start()
+# else:
+#     print("Memory extraction disabled")
 
 print(f"Listening to topic: {topic_name}")
 print("Waiting for messages... (Press Ctrl+C to stop)")
 
 try:
     for message in consumer:
+        print()
+        print()
         if message.value.get('data', {}).get('from_phone') not in phone_numbers:
             continue
         print(f"\nReceived message:")
@@ -286,6 +413,7 @@ try:
         print(f"Partition: {message.partition}")
         print(f"Offset: {message.offset}")
         print(f"Value: {message.value}")
+       
         
         # Extract data from the received message
         message_data = message.value.get('data', {})
@@ -295,6 +423,7 @@ try:
         sent_at = message_data.get('sent_at')
         
         print(f"Parsed - Chat ID: {chat_id}, From: {from_phone}, Message: {msg}, Sent At: {sent_at}")
+        print("-----------------------------------")
         
         # Check if message is not older than 1 minute
         if sent_at:
@@ -303,15 +432,10 @@ try:
                 sent_time = datetime.strptime(sent_at, '%Y-%m-%d %H:%M:%S %z')
                 current_time = datetime.now(timezone.utc)
                 time_diff = (current_time - sent_time).total_seconds()
-                print(f"Message time difference: {time_diff} seconds")
-                
-                if time_diff > 5:
-                    print(f"Ignoring message from {time_diff:.1f}s ago (older than 1 minute)")
+                if time_diff > 25:
                     continue
             except Exception as e:
                 print(f"Error parsing timestamp: {e}")
-        
-        print(f"Chat ID: {chat_id}, From: {from_phone}, Message: {msg}")
         
         
         
@@ -322,15 +446,6 @@ try:
                 'sent_from': from_phone,
                 'sent_at': sent_at
             })
-
-            # Queue for memory extraction
-            if memory_extraction_enabled:
-                memory_extraction_queue.append({
-                    'chat_id': chat_id,
-                    'phone': from_phone,
-                    'message': msg,
-                    'timestamp': sent_at
-                })
 
         # Call think_and_act with chat_id, message, from_phone, chat_mapping, and priority_queue
         if chat_id and msg and from_phone:
@@ -351,7 +466,7 @@ try:
             # priority_queue.extend(new_queue)
 
 
-            think_and_act(chat_id, msg, from_phone, chat_mapping, priority_queue, REMINDER_DELAY, ai_prompt)
+            think_and_act(chat_id, msg, from_phone, chat_mapping, priority_queue, REMINDER_DELAY, ai_prompt, memory_extractor if memory_extraction_enabled else None, memory_priority_queue if memory_extraction_enabled else None, extract_memory if memory_extraction_enabled else None)
             
             # Rebuild the heap after think_and_act may have modified it
             heapq.heapify(priority_queue)

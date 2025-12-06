@@ -145,23 +145,22 @@ Chat History:
     }
 
     try:
-        print(f"[ANALYZE] Calling Gemini API to analyze {phone_number}...")
+        # print(f"[ANALYZE] Calling Gemini API to analyze {phone_number}...")
         r = requests.post(
             f"{url}?key={gemini_api_key}",
             headers=headers,
             json=payload,
             timeout=30
         )
-        print(f"[ANALYZE] HTTP {r.status_code}")
+        # print(f"[ANALYZE] HTTP {r.status_code}")
 
         if r.ok:
             response_data = r.json()
             print(f"[ANALYZE] Gemini response received")
             try:
                 analysis_result = response_data['candidates'][0]['content']['parts'][0]['text']
-                print(f"[ANALYZE] Raw analysis result: {analysis_result}")
-                analysis_result = analysis_result[7:-3]
-                print(f"[ANALYZE] Trimmed analysis result: {analysis_result}")
+                if analysis_result.startswith("```json") and analysis_result.endswith("```"):
+                    analysis_result = analysis_result[7:-3]
                 analysis_result_json = json.loads(analysis_result)
 
                 reputation_reduction = analysis_result_json.get("score", None)
@@ -315,12 +314,17 @@ def get_convo_starters(chat_history):
             text = msg.get('text', '')
             history_text += f"{text}\n"
 
-    prompt = f"""Based on the following chat history, generate 3 creative and engaging conversation starters to keep the chat going. Make them relevant to the context and short (1-2 sentences each).
+    prompt = f"""Based on the following chat history, generate 3 creative and engaging conversation starters to keep the chat going. Make them relevant to the context and short (1-2 sentences each). Keep it casual and gen-z but dont try too hard.
 
 Chat History:
 {history_text}
 
-Please provide exactly 3 conversation starters, one per line."""
+Please provide exactly 2 conversation starters, one per line.
+Tone: Casual, lower case, Gen Z, warm.
+NO robotic "I hope you are well".
+Reference the specific memory.
+Keep it under 15 words.
+"""
 
     # Call Gemini API
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent"
@@ -369,3 +373,145 @@ Please provide exactly 3 conversation starters, one per line."""
     except Exception as e:
         print(f"[CONVO] Failed to call Gemini API: {e}")
         return []
+
+
+def extract_memory(chat_id, phone_number, message_text, timestamp, memory_extractor=None, get_chat_history=None):
+    """
+    Extract memory from a single message using Gemini AI.
+    
+    Args:
+        chat_id: The ID of the chat
+        phone_number: The phone number of the sender
+        message_text: The text of the message
+        timestamp: The timestamp of the message
+        memory_extractor: The MemoryExtractor instance (used for contact manager)
+        get_chat_history: Function to retrieve chat history (not used)
+    """
+    if not memory_extractor:
+        print("[MEMORY] No memory extractor provided")
+        return
+    
+    if not gemini_api_key:
+        print("[MEMORY] ERROR: GEMINI_API_KEY not set")
+        return
+
+    try:
+        # Get person name
+        person_name = memory_extractor.contact_manager.get_name(phone_number)
+        if not person_name:
+            memory_extractor.contact_manager.track_unknown(phone_number)
+            print(f"[MEMORY] Skipping unknown contact: {phone_number}")
+            return
+
+        print("Timestamp:", timestamp)
+        # Construct extraction prompt (same as memory_extractor but without chat context)
+        prompt = f"""TASK: Determine whether the given message contains information that would still matter to the user weeks or months from now, meaning it is memorable.
+
+MESSAGE:
+From: {person_name}
+Text: "{message_text}"
+Timestamp: {timestamp}
+
+A MESSAGE IS MEMORABLE IF IT CONTAINS:
+- **Specific future events or dates** (exams, interviews, deadlines, trips)
+- **Achievements or milestones** (job offer, passed exam, promotion, award)
+- **Concrete plans** (especially those involving the user)
+- **Life updates** (moving, new job, school changes, relationship changes)
+- **Emotional context** tied to meaningful situations (stress, excitement, worry)
+- **Unresolved plans** or suggestions that may require follow-up
+- **Important personal circumstances** (health issues, major decisions, conflicts)
+
+A MESSAGE IS *NOT* MEMORABLE IF IT IS:
+- Routine small talk (hey, lol, ok, thanks, wsp, hi)
+- Casual check-ins without meaningful content
+- Everyday activities (eating, commuting, chores)
+- Generic or low-impact comments without future relevance
+
+CATEGORIES:
+exam/test, achievement, event_attended, event_planned,
+plan_with_user, unresolved_plan, career_update,
+personal_challenge, relationship_update, health_concern,
+general_important
+
+
+OUTPUT (JSON ONLY):
+
+If memorable:{{
+  "is_memorable": "true",
+  "category": "<one category>",
+  "summary": "<under 10 words, include the person's name>",
+  "event_date": "<YYYY-MM-DD HH:MM:SS %z, or timestamp+30 seconds if no timeframe is given by user>",
+  "status": "upcoming | completed | unresolved",
+  "emotional_state": "stressed | excited | worried | happy | null",
+  "reasoning": "<why this matters>"
+}}
+
+If not memorable:
+{{
+  "is_memorable": "false"
+}}
+
+Return only the JSON.
+"""
+
+
+        # Call Gemini API
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent"
+
+        payload = {
+            "contents": [{
+                "parts": [{"text": prompt}]
+            }]
+        }
+
+        headers = {"Content-Type": "application/json"}
+
+        r = requests.post(
+            f"{url}?key={gemini_api_key}",
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        # print(f"[MEMORY] HTTP {r.status_code}")
+
+        if r.ok:
+            print("--------------------------------")
+            response_data = r.json()
+            ai_response = response_data['candidates'][0]['content']['parts'][0]['text']
+            print(f"[MEMORY] Gemini response: {ai_response}")
+
+            # Clean up response (remove markdown if present)
+            ai_response = ai_response.strip()
+            if ai_response.startswith('```json'):
+                ai_response = ai_response[7:]
+            if ai_response.startswith('```'):
+                ai_response = ai_response[3:]
+            if ai_response.endswith('```'):
+                ai_response = ai_response[:-3]
+            ai_response = ai_response.strip()
+
+            # Parse JSON
+            result = json.loads(ai_response)
+
+            if result.get('is_memorable') == 'true':
+                print(f"[MEMORY] ✓ Memorable: {person_name} - {message_text[:30]}... - {result.get('event_date')}")
+                print("--------------------------------")
+                return result
+            else:
+                print(f"[MEMORY] ✗ Not memorable: {person_name} - {message_text[:30]}...")
+                print("--------------------------------")
+                return None
+
+        else:
+            print(f"[MEMORY] Gemini API error: {r.status_code}")
+            print("--------------------------------")
+            return None
+
+    except json.JSONDecodeError as e:
+        print(f"[MEMORY] Failed to parse Gemini response: {e}")
+        print("--------------------------------")
+        return None
+    except Exception as e:
+        print(f"[MEMORY] Error extracting memory: {e}")
+        print("--------------------------------")
+        return None
