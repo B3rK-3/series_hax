@@ -11,5 +11,12 @@
       "relationship": "friend"
     }
   },
-  "unknown_contacts": {}
+  "unknown_contacts": {
+    "+16463458837": {
+      "first_seen": "2025-12-06T11:44:33.110835",
+      "last_seen": "2025-12-06T11:44:33.112958",
+      "message_count": 4,
+      "suggested_name": null
+    }
+  }
 }

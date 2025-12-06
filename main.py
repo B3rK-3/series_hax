@@ -5,7 +5,7 @@ import heapq
 import threading
 import time
 from time import sleep
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 from dotenv import load_dotenv
 from src import (
@@ -291,16 +291,18 @@ try:
         chat_id = int(message_data.get('chat_id'))
         msg = message_data.get('text')
         sent_at = message_data.get('sent_at')
+        print(f"Parsed - Chat ID: {chat_id}, From: {from_phone}, Message: {msg}, Sent At: {sent_at}")
         
         # Check if message is not older than 1 minute
         if sent_at:
             try:
                 # Parse the sent_at timestamp
                 sent_time = datetime.strptime(sent_at, '%Y-%m-%d %H:%M:%S %z')
-                current_time = datetime.now(sent_time.tzinfo)
+                current_time = datetime.now(timezone.utc)
                 time_diff = (current_time - sent_time).total_seconds()
+                print(f"Message time difference: {time_diff} seconds")
                 
-                if time_diff > 60:
+                if time_diff > 5:
                     print(f"Ignoring message from {time_diff:.1f}s ago (older than 1 minute)")
                     continue
             except Exception as e:
