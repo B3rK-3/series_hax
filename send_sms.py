@@ -53,7 +53,7 @@ def main() -> int:
     base_url ="https://series-hackathon-service-202642739529.us-east1.run.app" 
     api_key = '6113d6ed-b505-4b92-ae29-21fbe76eb2fc' 
     sender = "+16463458837"
-    recipient = ["+12017244539"] 
+    recipient = ["+12017244539", "+14075551212"] 
     text = "I WIN"
 
     url = f"{base_url}/api/chats/{1702219}/chat_messages"

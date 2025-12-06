@@ -1,0 +1,1434 @@
+{
+  "components": {
+    "schemas": {
+      "ChatMessageAttachment": {
+        "properties": {
+          "data_base64": {
+            "description": "Base64-encoded file data (no data URI prefix)",
+            "type": "string"
+          },
+          "filename": {
+            "example": "image.png",
+            "type": "string"
+          },
+          "mime_type": {
+            "example": "image/png",
+            "type": "string"
+          }
+        },
+        "required": [
+          "filename",
+          "mime_type",
+          "data_base64"
+        ],
+        "type": "object"
+      },
+      "ChatMessagesCreateJSONPayload": {
+        "properties": {
+          "message": {
+            "properties": {
+              "attachments": {
+                "items": {
+                  "$ref": "#/components/schemas/ChatMessageAttachment"
+                },
+                "type": "array"
+              },
+              "text": {
+                "example": "Sample Chat Message Text",
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "ChatsCreatePayload": {
+        "properties": {
+          "chat": {
+            "properties": {
+              "display_name": {
+                "description": "Optional chat display name",
+                "example": "Sample Chat",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "phone_numbers": {
+                "example": [
+                  "+13343284472",
+                  "+13344713465"
+                ],
+                "items": {
+                  "description": "Recipient phone number (E.164)",
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "phone_numbers"
+            ],
+            "type": "object"
+          },
+          "message": {
+            "properties": {
+              "text": {
+                "example": "Hello! This is a sample message.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          },
+          "send_from": {
+            "description": "Phone number to send from (E.164)",
+            "example": "+13175269229",
+            "type": "string"
+          }
+        },
+        "required": [
+          "send_from",
+          "chat",
+          "message"
+        ],
+        "type": "object"
+      },
+      "ContactBody": {
+        "properties": {
+          "company": {
+            "example": "Acme Corp",
+            "type": "string"
+          },
+          "email": {
+            "example": "john@example.com",
+            "format": "email",
+            "type": "string"
+          },
+          "first_name": {
+            "example": "John",
+            "type": "string"
+          },
+          "last_name": {
+            "example": "Doe",
+            "type": "string"
+          },
+          "location": {
+            "example": "San Francisco, CA",
+            "type": "string"
+          },
+          "phone_number": {
+            "example": "+15551234567",
+            "type": "string"
+          },
+          "title": {
+            "example": "CEO",
+            "type": "string"
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "phone_number"
+        ],
+        "type": "object"
+      },
+      "ContactsCreatePayload": {
+        "properties": {
+          "contact": {
+            "$ref": "#/components/schemas/ContactBody"
+          }
+        },
+        "required": [
+          "contact"
+        ],
+        "type": "object"
+      },
+      "ContactsUpdatePayload": {
+        "properties": {
+          "contact": {
+            "$ref": "#/components/schemas/ContactBody"
+          }
+        },
+        "required": [
+          "contact"
+        ],
+        "type": "object"
+      },
+      "IMessageAvailabilityCheckPayload": {
+        "properties": {
+          "phone_number": {
+            "example": "+13343284472",
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone_number"
+        ],
+        "type": "object"
+      },
+      "KafkaCredCreatePayload": {
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "consumer_group_id": {
+            "type": "string"
+          },
+          "team_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "topic_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "consumer_group_id",
+          "client_id",
+          "topic_name"
+        ],
+        "type": "object"
+      },
+      "KafkaCredentialResponse": {
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "consumer_group_id": {
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "team_id": {
+            "type": "string"
+          },
+          "topic_name": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ParticipantCreatePayload": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "fname": {
+            "type": "string"
+          },
+          "lname": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fname",
+          "lname",
+          "email",
+          "phone"
+        ],
+        "type": "object"
+      },
+      "ParticipantResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fname": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "lname": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PublicTeamRegisterPayload": {
+        "properties": {
+          "participants": {
+            "items": {
+              "$ref": "#/components/schemas/ParticipantCreatePayload"
+            },
+            "type": "array"
+          },
+          "team_name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ReactionPayload": {
+        "properties": {
+          "operation": {
+            "enum": [
+              "add",
+              "remove"
+            ],
+            "example": "add",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "love",
+              "like",
+              "dislike",
+              "laugh",
+              "emphasize",
+              "question"
+            ],
+            "example": "love",
+            "type": "string"
+          }
+        },
+        "required": [
+          "operation",
+          "type"
+        ],
+        "type": "object"
+      },
+      "SenderCreatePayload": {
+        "properties": {
+          "phone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone"
+        ],
+        "type": "object"
+      },
+      "SenderResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TeamCreatePayload": {
+        "properties": {
+          "assigned_sender_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "creds_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "team_name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TeamResponse": {
+        "properties": {
+          "api_key": {
+            "type": "string"
+          },
+          "assigned_sender_id": {
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "creds_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kafka_credential": {
+            "$ref": "#/components/schemas/KafkaCredentialResponse"
+          },
+          "participants": {
+            "items": {
+              "$ref": "#/components/schemas/ParticipantResponse"
+            },
+            "type": "array"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/SenderResponse"
+          },
+          "team_name": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TeamUpdatePayload": {
+        "properties": {
+          "assigned_sender_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "creds_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "team_name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "WebhookSubscriptionsCreatePayload": {
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "events": {
+            "items": {
+              "enum": [
+                "message.received",
+                "message.sent",
+                "message.read",
+                "call.completed",
+                "reaction.sent",
+                "reaction.received",
+                "typing_indicator.received",
+                "typing_indicator.removed"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "secret": {
+            "description": "Secret used to verify webhook signatures (HMAC-SHA256)",
+            "type": "string"
+          },
+          "version": {
+            "enum": [
+              2
+            ],
+            "type": "integer"
+          },
+          "webhook_url": {
+            "description": "Public HTTPS endpoint that will receive Linq webhooks",
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "webhook_url",
+          "events",
+          "version",
+          "secret",
+          "active"
+        ],
+        "type": "object"
+      },
+      "WebhookSubscriptionsUpdatePayload": {
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "events": {
+            "items": {
+              "enum": [
+                "message.received",
+                "message.sent",
+                "message.read",
+                "call.completed",
+                "reaction.sent",
+                "reaction.received",
+                "typing_indicator.received",
+                "typing_indicator.removed"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "version": {
+            "enum": [
+              2
+            ],
+            "type": "integer"
+          },
+          "webhook_url": {
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "webhook_url",
+          "events",
+          "version",
+          "active"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "bearerFormat": "API_KEY",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "title": "iMessage Service API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/api/chat_message_reactions/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "chat_message_id": 53106970,
+                    "created_at": "2025-12-05T15:22:52-06:00",
+                    "from_phone": "+16463458837",
+                    "id": 1255409,
+                    "is_from_me": true,
+                    "reaction": "dislike",
+                    "sent_at": "2025-12-05T15:22:53-06:00",
+                    "updated_at": "2025-12-05T15:22:54-06:00"
+                  }
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "errors": [
+                    {
+                      "code": "not_found",
+                      "detail": "The specified reaction could not be found",
+                      "status": 404,
+                      "title": "Not found"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get reaction",
+        "tags": [
+          "hackathon"
+        ]
+      }
+    },
+    "/api/chat_messages/{id}/reactions": {
+      "post": {
+        "description": "Add or remove a reaction.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "add-dislike": {
+                  "value": {
+                    "operation": "add",
+                    "type": "dislike"
+                  }
+                },
+                "add-emphasize": {
+                  "value": {
+                    "operation": "add",
+                    "type": "emphasize"
+                  }
+                },
+                "add-laugh": {
+                  "value": {
+                    "operation": "add",
+                    "type": "laugh"
+                  }
+                },
+                "add-like": {
+                  "value": {
+                    "operation": "add",
+                    "type": "like"
+                  }
+                },
+                "add-love": {
+                  "value": {
+                    "operation": "add",
+                    "type": "love"
+                  }
+                },
+                "add-question": {
+                  "value": {
+                    "operation": "add",
+                    "type": "question"
+                  }
+                },
+                "remove-dislike": {
+                  "value": {
+                    "operation": "remove",
+                    "type": "dislike"
+                  }
+                },
+                "remove-emphasize": {
+                  "value": {
+                    "operation": "remove",
+                    "type": "emphasize"
+                  }
+                },
+                "remove-laugh": {
+                  "value": {
+                    "operation": "remove",
+                    "type": "laugh"
+                  }
+                },
+                "remove-like": {
+                  "value": {
+                    "operation": "remove",
+                    "type": "like"
+                  }
+                },
+                "remove-love": {
+                  "value": {
+                    "operation": "remove",
+                    "type": "love"
+                  }
+                },
+                "remove-question": {
+                  "value": {
+                    "operation": "remove",
+                    "type": "question"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ReactionPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "chat_message_id": 53106970,
+                    "created_at": "2025-12-05T15:19:16-06:00",
+                    "from_phone": "+16463458837",
+                    "id": 1255307,
+                    "is_from_me": true,
+                    "reaction": "like",
+                    "sent_at": "2025-12-05T15:19:16-06:00",
+                    "updated_at": "2025-12-05T15:19:16-06:00"
+                  }
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "React to message",
+        "tags": [
+          "hackathon"
+        ]
+      }
+    },
+    "/api/chats": {
+      "get": {
+        "description": "Retrieve chats with optional phone filter and pagination.",
+        "parameters": [
+          {
+            "description": "Filter chats by a participant phone number (E.164)",
+            "in": "query",
+            "name": "phone_number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number (default 1)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page (max 100)",
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": [
+                    {
+                      "chat_handles": [
+                        {
+                          "id": 3450481,
+                          "joined_at": "2025-12-05T14:33:22.122-06:00",
+                          "phone_number": "+16463458837",
+                          "service": "iMessage"
+                        },
+                        {
+                          "id": 3450482,
+                          "joined_at": "2025-12-05T14:33:22.123-06:00",
+                          "phone_number": "+19176256109",
+                          "service": "iMessage"
+                        }
+                      ],
+                      "display_name": "Product Team",
+                      "group": false,
+                      "id": 1698665,
+                      "message_count": 1,
+                      "service": "iMessage"
+                    }
+                  ],
+                  "meta": {
+                    "page": "1",
+                    "per_page": 25,
+                    "total_count": 1,
+                    "total_pages": 1
+                  }
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "List chats",
+        "tags": [
+          "hackathon"
+        ]
+      },
+      "post": {
+        "description": "Create a chat and send initial message.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "group-chat": {
+                  "summary": "Group chat with display name",
+                  "value": {
+                    "chat": {
+                      "display_name": "Product Team",
+                      "phone_numbers": [
+                        "+13343284472",
+                        "+13344713465"
+                      ]
+                    },
+                    "message": {
+                      "text": "Standup in 5 mins"
+                    },
+                    "send_from": "+13175269229"
+                  }
+                },
+                "single-recipient": {
+                  "summary": "Simple SMS chat",
+                  "value": {
+                    "chat": {
+                      "phone_numbers": [
+                        "+13343284472"
+                      ]
+                    },
+                    "message": {
+                      "text": "Hello!"
+                    },
+                    "send_from": "+13175269229"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ChatsCreatePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "chat_handles": [
+                      {
+                        "id": 3450481,
+                        "joined_at": "2025-12-05T14:33:22.122-06:00",
+                        "phone_number": "+16463458837",
+                        "service": "iMessage"
+                      },
+                      {
+                        "id": 3450482,
+                        "joined_at": "2025-12-05T14:33:22.123-06:00",
+                        "phone_number": "+19176256109",
+                        "service": "iMessage"
+                      }
+                    ],
+                    "chat_messages": {
+                      "delivered_at": null,
+                      "delivery_status": "pending",
+                      "id": 53070953,
+                      "is_read": false,
+                      "sent_at": "2025-12-05T14:33:22.952-06:00",
+                      "text": "Standup in 5 mins"
+                    },
+                    "display_name": "Product Team",
+                    "group": false,
+                    "id": 1698665,
+                    "service": "iMessage"
+                  }
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Create chat",
+        "tags": [
+          "hackathon"
+        ]
+      }
+    },
+    "/api/chats/{chat_id}/chat_messages": {
+      "get": {
+        "description": "Return all messages for a chat.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chat_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": [
+                    {
+                      "attachments": [],
+                      "chat_handle_id": 3450481,
+                      "delivered_at": "2025-12-05T14:33:24.334-06:00",
+                      "delivery_status": "delivered",
+                      "edited_at": null,
+                      "id": 53070953,
+                      "is_read": false,
+                      "reactions": [],
+                      "sent_at": "2025-12-05T14:33:22.952-06:00",
+                      "sent_from": "+16463458837",
+                      "text": "Standup in 5 mins"
+                    },
+                    {
+                      "attachments": [],
+                      "chat_handle_id": 3450482,
+                      "delivered_at": "2025-12-05T14:41:33.184-06:00",
+                      "delivery_status": "delivered",
+                      "edited_at": null,
+                      "id": 53077426,
+                      "is_read": false,
+                      "reactions": [],
+                      "sent_at": "2025-12-05T14:41:33.184-06:00",
+                      "sent_from": "+19176256109",
+                      "text": "Yo"
+                    },
+                    {
+                      "attachments": [],
+                      "chat_handle_id": 3450482,
+                      "delivered_at": "2025-12-05T14:41:49.183-06:00",
+                      "delivery_status": "delivered",
+                      "edited_at": null,
+                      "id": 53077672,
+                      "is_read": false,
+                      "reactions": [],
+                      "sent_at": "2025-12-05T14:41:49.183-06:00",
+                      "sent_from": "+19176256109",
+                      "text": "Dudhebdidnejsj"
+                    },
+                    {
+                      "attachments": [],
+                      "chat_handle_id": 3450482,
+                      "delivered_at": "2025-12-05T14:42:05.000-06:00",
+                      "delivery_status": "delivered",
+                      "edited_at": null,
+                      "id": 53077912,
+                      "is_read": false,
+                      "reactions": [],
+                      "sent_at": "2025-12-05T14:42:05.000-06:00",
+                      "sent_from": "+19176256109",
+                      "text": "Fianko just posted."
+                    }
+                  ],
+                  "meta": {
+                    "page": "1",
+                    "per_page": 25,
+                    "total_count": 4,
+                    "total_pages": 1
+                  }
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "List chat messages",
+        "tags": [
+          "hackathon"
+        ]
+      },
+      "post": {
+        "description": "Send a message (JSON with optional base64 attachments).",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chat_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "message": {
+                  "text": "Hello there"
+                }
+              },
+              "examples": {
+                "multiple-files": {
+                  "summary": "Multiple attachments",
+                  "value": {
+                    "message": {
+                      "attachments": [
+                        {
+                          "data_base64": "\u003cbase64\u003e",
+                          "filename": "spec.pdf",
+                          "mime_type": "application/pdf"
+                        },
+                        {
+                          "data_base64": "\u003cbase64\u003e",
+                          "filename": "image.jpg",
+                          "mime_type": "image/jpeg"
+                        }
+                      ],
+                      "text": "Docs attached"
+                    }
+                  }
+                },
+                "single-image": {
+                  "summary": "Image attachment",
+                  "value": {
+                    "message": {
+                      "attachments": [
+                        {
+                          "data_base64": "\u003cbase64\u003e",
+                          "filename": "linq-logo.png",
+                          "mime_type": "image/png"
+                        }
+                      ],
+                      "text": "See attached"
+                    }
+                  }
+                },
+                "text-only": {
+                  "summary": "Text only",
+                  "value": {
+                    "message": {
+                      "text": "Hello there"
+                    }
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ChatMessagesCreateJSONPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "attachments": [],
+                    "chat_handle_id": 3450481,
+                    "delivered_at": null,
+                    "delivery_status": "pending",
+                    "id": 53106190,
+                    "is_read": false,
+                    "reactions": [],
+                    "sent_at": "2025-12-05T15:16:06.214-06:00",
+                    "sent_from": "+16463458837",
+                    "text": "1698665"
+                  }
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Create chat message",
+        "tags": [
+          "hackathon"
+        ]
+      }
+    },
+    "/api/chats/{chat_id}/chat_messages/{message_id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chat_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Delete chat message",
+        "tags": [
+          "hackathon"
+        ]
+      },
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chat_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get chat message",
+        "tags": [
+          "hackathon"
+        ]
+      }
+    },
+    "/api/chats/{chat_id}/chat_messages/{message_id}/edit": {
+      "post": {
+        "description": "Edit text within 15 minutes of creation.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chat_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "simple-edit": {
+                  "value": {
+                    "text": "Edited message"
+                  }
+                },
+                "typo-fix": {
+                  "summary": "Fix a typo",
+                  "value": {
+                    "text": "Corrected spelling"
+                  }
+                }
+              },
+              "schema": {
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Edit chat message",
+        "tags": [
+          "hackathon"
+        ]
+      }
+    },
+    "/api/chats/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get chat",
+        "tags": [
+          "hackathon"
+        ]
+      }
+    },
+    "/api/chats/{id}/mark_as_read": {
+      "put": {
+        "description": "Marks all messages in the chat as read on Linq. Returns 204 if successful.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "422": {
+            "description": "Failed to mark as read"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Mark chat as read",
+        "tags": [
+          "hackathon"
+        ]
+      }
+    },
+    "/api/chats/{id}/start_typing": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Start typing indicator",
+        "tags": [
+          "hackathon"
+        ]
+      }
+    },
+    "/api/chats/{id}/stop_typing": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Stop typing indicator",
+        "tags": [
+          "hackathon"
+        ]
+      }
+    },
+    "/api/i_message_availability/check": {
+      "post": {
+        "description": "Returns whether the number supports iMessage.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "alt": {
+                  "value": {
+                    "phone_number": "13343284472"
+                  }
+                },
+                "basic": {
+                  "value": {
+                    "phone_number": "+13343284472"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/IMessageAvailabilityCheckPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Check iMessage availability",
+        "tags": [
+          "hackathon"
+        ]
+      }
+    },
+    "/api/teams/{id}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "/api/teams/{id}/participants": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    }
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ]
+}
