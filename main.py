@@ -8,7 +8,11 @@ from time import sleep
 from datetime import datetime
 import os
 from dotenv import load_dotenv
-from src import think_and_act, send_reminder, priority_queue, get_chat_history, get_ai_response, scan_inactive_chats, add_message_to_chat
+from src import (
+    think_and_act, send_reminder, priority_queue, get_chat_history,
+    get_ai_response, scan_inactive_chats, add_message_to_chat,
+    ContactManager, MemoryExtractor, EnhancedMemoryEngine
+)
 
 # Load environment variables
 load_dotenv()
@@ -22,6 +26,7 @@ base_url = os.getenv('SERIES_BASE_URL')
 api_key = os.getenv('SERIES_API_KEY')
 sender = os.getenv('SENDER_PHONE')
 phone_numbers = os.getenv('PHONE_NUMBERS', '').split(',')
+gemini_api_key = os.getenv('GEMINI_API_KEY', '')
 
 # Kafka Configuration
 bootstrap_servers = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
@@ -47,6 +52,13 @@ last_activity_tracker = {}
 
 # Flag to control the monitoring thread
 stop_monitoring = False
+
+# Memory extraction system
+memory_extraction_queue = []
+memory_extraction_enabled = os.getenv('MEMORY_EXTRACTION_ENABLED', 'true').lower() == 'true'
+contact_manager = ContactManager()
+memory_extractor = MemoryExtractor(gemini_api_key, contact_manager)
+enhanced_memory = EnhancedMemoryEngine()
 
 
 def create_group_chat():
@@ -176,7 +188,7 @@ def monitor_priority_queue():
 def scan_chats_for_inactivity():
     """Periodically scan chats for inactivity and send conversation starters."""
     global stop_monitoring
-    
+
     while not stop_monitoring:
         try:
             scan_inactive_chats(chat_mapping, last_activity_tracker, LAST_ACTIVITY, phone_to_chat)
@@ -185,6 +197,44 @@ def scan_chats_for_inactivity():
         except Exception as e:
             print(f"Error in chat inactivity scanner: {e}")
             sleep(CONVO_STARTERS)
+
+
+def extract_memories_worker():
+    """Background worker for batch memory extraction."""
+    global stop_monitoring
+
+    while not stop_monitoring:
+        try:
+            # Process when we have at least 5 messages or every 5 minutes
+            if len(memory_extraction_queue) >= 5:
+                print(f"[MEMORY] Processing batch of {len(memory_extraction_queue)} messages...")
+
+                # Group messages by chat_id
+                grouped = {}
+                batch = memory_extraction_queue.copy()
+                memory_extraction_queue.clear()
+
+                for item in batch:
+                    chat_id = item['chat_id']
+                    if chat_id not in grouped:
+                        grouped[chat_id] = []
+                    grouped[chat_id].append(item)
+
+                # Extract memories for each chat
+                for chat_id, messages in grouped.items():
+                    chat_history = get_chat_history(chat_id)
+                    memories = memory_extractor.analyze_messages(chat_id, messages, chat_history)
+
+                    for memory in memories:
+                        enhanced_memory.save_memory(memory)
+
+                print(f"[MEMORY] Batch processing complete")
+
+            sleep(30)  # Check every 30 seconds
+
+        except Exception as e:
+            print(f"[MEMORY] Error in extraction worker: {e}")
+            sleep(30)
 
 
 # Initialize Consumer
@@ -215,6 +265,14 @@ monitor_thread.start()
 print("Starting chat inactivity scanner thread...")
 scanner_thread = threading.Thread(target=scan_chats_for_inactivity, daemon=True)
 scanner_thread.start()
+
+# Start memory extraction thread
+if memory_extraction_enabled:
+    print("Starting memory extraction worker...")
+    extraction_thread = threading.Thread(target=extract_memories_worker, daemon=True)
+    extraction_thread.start()
+else:
+    print("Memory extraction disabled")
 
 print(f"Listening to topic: {topic_name}")
 print("Waiting for messages... (Press Ctrl+C to stop)")
@@ -257,7 +315,16 @@ try:
                 'sent_from': from_phone,
                 'sent_at': sent_at
             })
-        
+
+            # Queue for memory extraction
+            if memory_extraction_enabled:
+                memory_extraction_queue.append({
+                    'chat_id': chat_id,
+                    'phone': from_phone,
+                    'message': msg,
+                    'timestamp': sent_at
+                })
+
         # Call think_and_act with chat_id, message, from_phone, chat_mapping, and priority_queue
         if chat_id and msg and from_phone:
             # Update last activity time for this chat

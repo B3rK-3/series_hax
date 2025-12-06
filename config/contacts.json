@@ -1,0 +1,15 @@
+{
+  "contacts": {
+    "+14072724176": {
+      "name": "Yahil Corcino",
+      "nickname": "Yahil",
+      "relationship": "friend"
+    },
+    "+12017244539": {
+      "name": "Eren Dogan",
+      "nickname": "Eren",
+      "relationship": "friend"
+    }
+  },
+  "unknown_contacts": {}
+}
