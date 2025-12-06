@@ -3,7 +3,7 @@
 Test script for get_chat_history function
 """
 
-from functions import get_chat_history
+from src.series_api import get_chat_history
 
 def test_get_chat_history():
     """Test the get_chat_history function with a sample chat_id"""

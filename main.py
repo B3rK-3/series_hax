@@ -1,6 +1,3 @@
-# Python Kafka Consumer Example
-# Install: pip install kafka-python
-
 from kafka import KafkaConsumer
 import json
 import requests
@@ -11,13 +8,13 @@ from time import sleep
 from datetime import datetime
 import os
 from dotenv import load_dotenv
-from functions import think_and_act, send_reminder, priority_queue, get_chat_history, get_ai_response, scan_inactive_chats, add_message_to_chat
+from src import think_and_act, send_reminder, priority_queue, get_chat_history, get_ai_response, scan_inactive_chats, add_message_to_chat
 
 # Load environment variables
 load_dotenv()
 
 # Load AI prompt from file
-with open('ai_prompt.txt', 'r') as f:
+with open('config/ai_prompt.txt', 'r') as f:
     ai_prompt = f.read()
 
 # API Configuration
