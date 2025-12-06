@@ -268,16 +268,16 @@ try:
             
             # Remove elements from priority queue with same chat_id and from_phone
             # Create a new queue without the matching elements
-            new_queue = []
-            for item in priority_queue:
-                timestamp, qid, phone, delay_seconds = item
-                if not (qid == chat_id and phone == from_phone):
-                    new_queue.append(item)
+            # new_queue = []
+            # for item in priority_queue:
+            #     timestamp, qid, phone, delay_seconds = item
+            #     if not (qid == chat_id and phone == from_phone):
+            #         new_queue.append(item)
             
-            # Rebuild the heap
-            priority_queue.clear()
-            heapq.heapify(new_queue)
-            priority_queue.extend(new_queue)
+            # # Rebuild the heap
+            # priority_queue.clear()
+            # heapq.heapify(new_queue)
+            # priority_queue.extend(new_queue)
 
 
             think_and_act(chat_id, msg, from_phone, chat_mapping, priority_queue, REMINDER_DELAY, ai_prompt)
