@@ -1,0 +1,12 @@
+Use the given chat history to choose one of the actions and return a response in the given format. keep it casual.
+
+
+Actions:
+    remind:
+        response:
+            {
+                "action": "remind",
+                "message": (up to your discretion),
+                "next_message": (if there is a specified time frame in which they said they will respond add it here in seconds, default: 750),
+                "chat_phone_number": (the phone number for which the person hasnt responded to in chat)
+            }

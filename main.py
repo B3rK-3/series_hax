@@ -8,7 +8,11 @@ import heapq
 import threading
 import time
 from time import sleep
-from functions import think_and_act, send_reminder
+from functions import think_and_act, send_reminder, priority_queue, get_chat_history, get_ai_response
+
+# Load AI prompt from file
+with open('ai_prompt.txt', 'r') as f:
+    ai_prompt = f.read()
 
 # API Configuration
 base_url = "https://series-hackathon-service-202642739529.us-east1.run.app"
@@ -27,9 +31,6 @@ chat_mapping = {}
 
 # Dictionary to store phone_number to chat_id mapping (for individual chats)
 phone_to_chat = {}
-
-# Priority queue: (timestamp, chat_id, phone_number)
-priority_queue = []
 
 # Default delay for reminders (in seconds)
 REMINDER_DELAY = 5  # 5 seconds
@@ -100,7 +101,24 @@ def monitor_priority_queue():
                 if timestamp <= current_time:
                     heapq.heappop(priority_queue)
                     print(f"\n[REMINDER] Expired reminder for chat_id: {chat_id}, phone: {phone}")
-                    send_reminder(chat_id, phone, phone_to_chat, chat_mapping[chat_id])
+                    if chat_id in chat_mapping:
+                        send_reminder(chat_id, phone, phone_to_chat, chat_mapping[chat_id])
+                    else:
+                        chat_history = get_chat_history(chat_id)
+                        print("Chat history for AI response:", chat_history)
+                        prompt = "what is the phone number the user has to respond to? give only the phone number"
+                        response_phone = get_ai_response(prompt, chat_history)
+                        
+                        # Find chat_id where both response_phone and phone exist in chat_mapping
+                        found_chat_id = None
+                        for cid, phones in chat_mapping.items():
+                            if response_phone in phones and phone in phones:
+                                found_chat_id = cid
+                                break
+                        
+                        print(f"[MONITOR] Found chat_id containing both {response_phone} and {phone}: {found_chat_id}")
+                        
+                        send_reminder(chat_id, phone, phone_to_chat, [response_phone])
                     print(f"Priority queue size after removal: {len(priority_queue)}")
             
             # Sleep for a short period to avoid busy waiting
@@ -156,8 +174,6 @@ try:
         
         # Call think_and_act with chat_id, message, from_phone, chat_mapping, and priority_queue
         if chat_id and msg and from_phone:
-            think_and_act(chat_id, msg, from_phone, chat_mapping, priority_queue, REMINDER_DELAY)
-            
             # Remove elements from priority queue with same chat_id and from_phone
             # Create a new queue without the matching elements
             new_queue = []
@@ -165,6 +181,21 @@ try:
                 timestamp, qid, phone = item
                 if not (qid == chat_id and phone == from_phone):
                     new_queue.append(item)
+            
+            # Rebuild the heap
+            priority_queue.clear()
+            heapq.heapify(new_queue)
+            priority_queue.extend(new_queue)
+
+
+            think_and_act(chat_id, msg, from_phone, chat_mapping, priority_queue, REMINDER_DELAY, ai_prompt)
+            
+            # Remove elements from priority queue with same chat_id and from_phone
+            # Create a new queue without the matching elements
+            new_queue = []
+            for item in priority_queue:
+                timestamp, qid, phone = item
+                new_queue.append(item)
             
             # Rebuild the heap
             priority_queue.clear()
