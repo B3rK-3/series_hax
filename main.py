@@ -2,21 +2,25 @@
 # Install: pip install kafka-python
 
 from kafka import KafkaConsumer
+import os
 import json
 import requests
+from dotenv import load_dotenv
 from functions import think_and_act
 
+load_dotenv()
+
 # API Configuration
-base_url = "https://series-hackathon-service-202642739529.us-east1.run.app"
-api_key = '6113d6ed-b505-4b92-ae29-21fbe76eb2fc'
+base_url = os.getenv("SERIES_BASE_URL")
+api_key = os.getenv("SERIES_API_KEY")
 sender = "+16463458837"
 phone_numbers = ["+12017244539", "+14072724176"]
 
 # Kafka Configuration
-bootstrap_servers = 'pkc-619z3.us-east1.gcp.confluent.cloud:9092'
-topic_name = 'team.team.0e56f514cd1d47b99623af887ce23c32'
-ssl_user = 'QRHNR6BCKVHD4M3U'
-api_secret = 'cfltTIivf3OHq6tr9fpASLxV4pp7vzPfvnz3cwT8+NAoOAJUCZwRuxuk1sSZTK+w'
+bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
+topic_name = os.getenv("KAFKA_TOPIC_NAME")
+ssl_user = os.getenv("KAFKA_USERNAME")
+api_secret = os.getenv("KAFKA_SECRET")
 
 # Dictionary to store chat_id to phone_numbers mapping
 chat_mapping = {}
