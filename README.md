@@ -1,6 +1,6 @@
 # series_hax
 
-This project was built for the **series.so exclusive hackathon**, an elite gathering of 100 developers.
+This project was built for the **series.so exclusive hackathon**, consisting of 100 developers.
 
 ## Overview
 
@@ -45,6 +45,3 @@ This project was built for the **series.so exclusive hackathon**, an elite gathe
     python main.py
     ```
 
-## Hackathon Context
-
-Developed during the First Series.so Hackathon, this project explores the boundaries of programmatic messaging and real-time event processing.
